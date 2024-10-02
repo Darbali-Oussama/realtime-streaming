@@ -1,0 +1,10 @@
+kafka-python==2.0.2
+requests==2.27.1
+json5==0.9.6
+#pyspark==3.4.1
+cloudscraper
+pandas
+beautifulsoup4
+scikit-learn==1.0.2
+cassandra-driver
+lxml

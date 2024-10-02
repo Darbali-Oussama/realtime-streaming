@@ -1,0 +1,83 @@
+version: '3.7'
+services:
+    postgres:
+        image: postgres:9.6
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+        networks:
+            - airflow-kafka
+
+    webserver:
+        #image: puckel/docker-airflow:1.10.9
+        image: my_airflow
+
+        restart: always
+        depends_on:
+            - postgres
+        environment:
+            - LOAD_EX=n
+            - EXECUTOR=Local
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+            - ./requirements.txt:/usr/local/airflow/requirements.txt
+            - ./cars_stream.py:/usr/local/airflow/plugins/cars_stream.py
+            - ./stream_to_cassandra.py:/usr/local/airflow/plugins/stream_to_cassandra.py
+            - ./LR_model.sav:/usr/local/airflow/plugins/LR_model.sav
+        ports:
+            - "8080:8080"
+        #command: sh -c "pip install --upgrade pip && pip install -r /usr/local/airflow/requirements.txt && airflow initdb && airflow webserver"
+        # && airflow resetdb && airflow db init  && airflow scheduler && export FERNET_KEY="Wm2KZ1bKNzE8uJHb5fiTQcFTFYyxwvGqT-1lJlBZoDs=" 
+        command: sh -c "airflow initdb && airflow webserver"
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
+        networks:
+            - airflow-kafka
+    scheduler:
+        #image: puckel/docker-airflow:1.10.9
+        image: my_airflow
+        restart: always
+        depends_on:
+            - postgres
+        environment:
+            - LOAD_EX=n
+            - EXECUTOR=Local
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+            - ./requirements.txt:/usr/local/airflow/requirements.txt
+            - ./cars_stream.py:/usr/local/airflow/plugins/cars_stream.py
+            - ./stream_to_cassandra.py:/usr/local/airflow/plugins/stream_to_cassandra.py
+            - ./LR_model.sav:/usr/local/airflow/plugins/LR_model.sav
+        #command: sh -c "pip install --upgrade pip && pip install -r /usr/local/airflow/requirements.txt && airflow initdb && airflow scheduler"
+        command: sh -c "airflow initdb && airflow scheduler"
+        networks:
+            - airflow-kafka
+
+networks:
+  airflow-kafka:
+    external: true
+
+
+# docker build -t my_airflow .
