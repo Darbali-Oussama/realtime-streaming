@@ -1,6 +1,3 @@
-"""
-Gets the random user API data and writes the data to a Kafka topic every 10 seconds
-"""
 import json
 import pickle as pk
 import re
@@ -18,10 +15,8 @@ def scrap() :
     
     #requests
     #cloudfire protection
-    #j'ai utilise cloudscraper pour depasser le cloudfire protection contre le scraping dans le site de avito
     scraper = cloudscraper.create_scraper(delay=10, browser='chrome')
     l=[]
-    #la pagination de la page 2 vers la page 50
 
     htmlpg=scraper.get('https://www.avito.ma/fr/maroc/voitures-%C3%A0_vendre?brand=13&model=dokker,duster,logan').text
     soup0= BeautifulSoup(htmlpg,'lxml')
@@ -36,7 +31,6 @@ def scrap() :
             if not "minute" in date:
                 break
             carac=soup.find('div',class_= 'sc-1g3sn3w-4 etbZjx')
-            #obj0 contient le prix de la voiture
             obj0=soup.find('p',class_='sc-1x0vz2r-0 lnEFFR sc-1g3sn3w-13 czygWQ')
             l1=[]
             l2=[]
@@ -56,7 +50,6 @@ def scrap() :
                 continue
             try:
                 obj1=carac.find_all('span',class_= 'sc-1x0vz2r-0 kQHNss')
-                #le site avito n'est pas organisé c'est pour cela je viens de classifier selon la taile
                 for x in obj1:
                     f=x.text
                     if len(f)<6:
@@ -129,12 +122,6 @@ def scrap() :
 
     #df2 = pd.get_dummies(df2, columns=['Carburant', 'Boite_a_vitesse', 'Modele', 'Kilometrage','Cheval'])
     df2 = pd.get_dummies(df2)
-
-    # Renaming Kilometrage columns to match the desired format
-    """ df2.rename(columns=lambda x: x.replace('Kilometrage_', ''), inplace=True)
-    df2.rename(columns=lambda x: x.replace('Carburant_', ''), inplace=True)
-    df2.rename(columns=lambda x: x.replace('Boite_a_vitesse_', ''), inplace=True)
-    df2.rename(columns=lambda x: x.replace('Modele_', ''), inplace=True) """
 
     print(df2.head())
 
@@ -222,22 +209,6 @@ def create_kafka_producer():
 
     return KafkaProducer(bootstrap_servers=['kafka1:19092', 'kafka2:19093', 'kafka3:19094'])
 
-
-""" def start_streaming():
-    
-    #Writes the API data every 10 seconds to Kafka topic random_names
-    
-    
-    producer = create_kafka_producer()
-    kafka_data = scrap()
-
-    end_time = time.time() + 120 # the script will run for 2 minutes
-    while True:
-        if time.time() > end_time:
-            break
-
-        producer.send("cars_data", json.dumps(kafka_data).encode('utf-8'))
-        time.sleep(10)
 
 
 if __name__ == "__main__":
