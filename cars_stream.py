@@ -212,4 +212,4 @@ def create_kafka_producer():
 
 
 if __name__ == "__main__":
-    start_streaming() """
+    start_streaming()
